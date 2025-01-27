@@ -1,0 +1,49 @@
+language: c
+
+sudo: false
+
+os:
+  - linux
+
+addons:
+  apt:
+    packages:
+      - autoconf
+      - libncurses-dev
+      - build-essential
+      - libssl-dev
+      - libwxgtk2.8-dev
+      - libgl1-mesa-dev
+      - libglu1-mesa-dev
+      - libpng3
+      - default-jdk
+      - g++
+      - xsltproc
+
+matrix:
+  include:
+    - env: Linux32
+      os: linux
+      services:
+        - docker
+      script:
+        - ./scripts/build-docker-otp 32 sh -c "scripts/build-otp && ./otp_build tests && scripts/run-smoke-tests && bin/dialyzer --build_plt --apps erts kernel stdlib"
+    - env: Linux64Dialyzer
+      os: linux
+      script:
+        - ./scripts/build-otp
+        - ./scripts/run-dialyzer
+    - env: Linux64SmokeTest
+      os: linux
+      script:
+        - ./scripts/build-otp
+        - ./otp_build tests
+        - make release_docs
+        - ./scripts/run-smoke-tests
+
+before_script:
+  - set -e
+  - export ERL_TOP=$PWD
+  - export PATH=$ERL_TOP/bin:$PATH
+  - export ERL_LIBS=''
+  - export MAKEFLAGS=-j4
